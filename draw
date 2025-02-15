@@ -1,0 +1,264 @@
+#!/usr/bin/env python3
+# A Simple Drawing Tool by Lizard32
+# Usage: "draw <filename>"
+
+# KeyboardControls
+# ====-=-=---- - -
+# Ctrl+Q      > Quit
+# Ctrl+N      > New
+# Ctrl+S      > Save
+# Ctrl+R      > HideUI
+# Ctrl+W      > MouseON
+# Ctrl+F      > FillCanvas
+# Ctrl+C      > CopyCanvas
+# Ctrl+V      > PasteCanvas
+# Ctrl+X      > PickColor
+# Ctrl+Left   > Color--
+# Ctrl+Right  > Color++
+# Shift+Up    > MoveUp
+# Shift+Down  > MoveDown
+# Shift+Left  > MoveLeft
+# Shift+Right > MoveRight
+# Alt+Up      > Canvas++
+# Alt+Down    > Canvas--
+# Alt+Left    > RotateL
+# Alt+Right   > RotateR
+# 012345678   > Colors
+# Arrows      > MoveCursor
+# Space       > Draw
+
+# MouseControls
+# ====-=-=---- - -
+# Button1       > Draw
+# Button2       > PickColor
+# Shift+Button3 > FillAll
+# Wheel+        > Color++
+# Wheel-        > Color--
+# Shift+Wheel+  > Canvas++
+# Shift+Wheel-  > Canvas--
+# Alt+Wheel+    > RotateR
+# Alt+Wheel-    > RotateL
+
+# import
+import pygame
+import random
+import sys
+import os
+
+# colors
+non=(50,50,50,0)#0
+bla=(0,0,0,255)#1
+whi=(255,255,255,255)#2
+red=(255,0,0,255)#3
+yel=(255,255,0,255)#4
+gre=(0,255,0,255)#5
+cya=(0,255,255,255)#6
+blu=(0,0,255,255)#7
+mag=(255,0,255,255)#8
+
+# system
+window=320
+canvas=16
+font=16
+
+# variables
+rname=list("aaaa00.png")
+color=whi; ccol=color;
+cursor=[0,0]; cx=0; cnum=2
+show=True
+copy=False
+
+# keys & input
+mouseon=False
+ctrl=False
+shift=False
+alt=False
+space=False
+mouse1=False
+mouse2=False
+mouse3=False
+mousew=0
+
+# start program
+pygame.init()
+pygame.display.set_caption("untitled")
+win=pygame.display.set_mode((window,window))
+surf=pygame.Surface((canvas,canvas))
+csurf=pygame.Surface((canvas,canvas),pygame.SRCALPHA)
+font=pygame.font.SysFont(pygame.font.get_default_font(),font)
+pygame.mouse.set_visible(False)
+pygame.key.set_repeat(500,100)
+clock=pygame.time.Clock()
+surf.fill(bla)
+
+# loading files & generating names
+if len(sys.argv)>1:
+ if sys.argv[1].endswith(".png"):
+  name=sys.argv[1]
+  pygame.display.set_caption(name)
+  if os.path.exists(sys.argv[1]):
+   img=pygame.image.load(sys.argv[1])
+   canvas=list(img.get_rect().size)[0]
+   surf=pygame.Surface((canvas,canvas))
+   csurf=pygame.Surface((canvas,canvas),pygame.SRCALPHA)
+   surf.blit(img,(0,0))
+ else:
+  print("Not PNG.")
+  sys.exit()
+else:
+ i=0
+ while(i<6):
+  if i<4: rname[i]=chr(random.randrange(97,122))
+  elif i>3: rname[i]=chr(random.randrange(48,57))
+  i+=1
+ name="".join(rname)
+ pygame.display.set_caption(name)
+
+# actions/tools
+def do(act):
+ global surf,csurf,canvas
+ global mouseon,show,point
+ global color,copy,cp,cnum
+ if act=="draw": pygame.draw.rect(surf,color,pygame.Rect(cursor[0],cursor[1],1,1))
+ elif act=="rotl": surf=pygame.transform.rotate(surf,90)
+ elif act=="rotr": surf=pygame.transform.rotate(surf,-90)
+ elif act=="movu": copy=surf.copy(); surf.fill(bla); surf.blit(copy,(0,-1,16,16))
+ elif act=="movd": copy=surf.copy(); surf.fill(bla); surf.blit(copy,(0,1,16,16))
+ elif act=="movl": copy=surf.copy(); surf.fill(bla); surf.blit(copy,(-1,0,16,16))
+ elif act=="movr": copy=surf.copy(); surf.fill(bla); surf.blit(copy,(1,0,16,16))
+ elif act=="pick": color=surf.get_at((cursor[0],cursor[1]))
+ elif act=="incr": canvas+=1; copy=surf.copy(); surf=pygame.Surface((canvas,canvas)); csurf=pygame.Surface((canvas,canvas),pygame.SRCALPHA); surf.fill(bla); surf.blit(copy,(0,0,window,window))
+ elif act=="decr" and canvas>2: canvas-=1; copy=surf.copy(); surf=pygame.Surface((canvas,canvas)); csurf=pygame.Surface((canvas,canvas),pygame.SRCALPHA); surf.fill(bla); surf.blit(copy,(0,0,window,window))
+ elif act=="fill": surf.fill(color)
+ elif act=="hide": show=not show
+ elif act=="mouz": mouseon=not mouseon
+ elif act=="newf": os.execl(sys.argv[0],' ')
+ elif act=="save": pygame.image.save(surf,name)
+ elif act=="quit": sys.exit()
+ elif act=="copy": cp=surf.copy(); copy=True
+ elif act=="past" and copy==True: surf.blit(cp,(0,0,16,16))
+ elif act=="col+":
+  cnum+=1
+  if cnum>8: cnum=0
+ elif act=="col-":
+  cnum-=1
+  if cnum<0: cnum=8
+ 
+# main loop
+while True:
+ string="["+str(canvas)+"x"+str(canvas)+"] "+str(cursor[0])+"x"+str(cursor[1]) 
+ for event in pygame.event.get():
+  if event.type==pygame.QUIT:do("quit")
+  if event.type==pygame.KEYDOWN:
+   if event.key==pygame.K_LCTRL: ctrl=True
+   if event.key==pygame.K_LSHIFT: shift=True
+   if event.key==pygame.K_LALT: alt=True
+   if ctrl==True: 
+    if event.key==pygame.K_n: do("newf")
+    if event.key==pygame.K_q: do("quit")
+    if event.key==pygame.K_s: do("save")
+    if event.key==pygame.K_r: do("hide")
+    if event.key==pygame.K_f: do("fill")
+    if event.key==pygame.K_w: do("mouz")
+    if event.key==pygame.K_x: do("pick")
+    if event.key==pygame.K_c: do("copy")
+    if event.key==pygame.K_v: do("past")
+    if event.key==pygame.K_LEFT: do("col-")
+    if event.key==pygame.K_RIGHT: do("col+")
+   elif shift==True:
+    if event.key==pygame.K_LEFT: do("movl")
+    if event.key==pygame.K_RIGHT: do("movr") 
+    if event.key==pygame.K_UP: do("movu")
+    if event.key==pygame.K_DOWN: do("movd")   
+   elif alt==True:
+    if event.key==pygame.K_DOWN: do("decr")
+    if event.key==pygame.K_UP: do("incr")
+    if event.key==pygame.K_LEFT: do("rotl")
+    if event.key==pygame.K_RIGHT: do("rotr")
+   else:
+    if event.key==pygame.K_SPACE: space=True
+    if event.key==pygame.K_LEFT: cursor[0]-=1
+    if event.key==pygame.K_RIGHT: cursor[0]+=1
+    if event.key==pygame.K_UP: cursor[1]-=1
+    if event.key==pygame.K_DOWN: cursor[1]+=1
+    if event.key==pygame.K_1: cnum=1
+    if event.key==pygame.K_2: cnum=2
+    if event.key==pygame.K_3: cnum=3
+    if event.key==pygame.K_4: cnum=4
+    if event.key==pygame.K_5: cnum=5
+    if event.key==pygame.K_6: cnum=6
+    if event.key==pygame.K_7: cnum=7
+    if event.key==pygame.K_8: cnum=8
+    if event.key==pygame.K_0: cnum=0
+    if space==True: do("draw")
+  if event.type==pygame.KEYUP:
+   if event.key==pygame.K_LSHIFT: shift=False
+   if event.key==pygame.K_LCTRL: ctrl=False
+   if event.key==pygame.K_LALT: alt=False
+   if event.key==pygame.K_SPACE: space=False
+  if event.type==pygame.MOUSEBUTTONDOWN:
+   if event.button==1: mouse1=True
+   if event.button==3: mouse2=True
+   if event.button==2: mouse3=True
+  if event.type==pygame.MOUSEBUTTONUP:
+   if event.button==1: mouse1=False
+   if event.button==3: mouse2=False
+   if event.button==2: mouse3=False
+  if event.type == pygame.MOUSEWHEEL:
+   if mouseon==True:
+    if shift==True:
+     if event.y>0: do("incr")
+     if event.y<0: do("decr")
+    elif alt==True:
+     if event.y>0: do("rotr")
+     if event.y<0: do("rotl")
+    else:
+     if event.y>0: do("col+")
+     if event.y<0: do("col-")
+     
+  if mouseon==True:
+   pygame.mouse.set_visible(False)
+   mouz=(canvas*(window/(canvas*canvas)))
+   cursor[0]=round(list(pygame.mouse.get_pos())[0]/mouz)
+   cursor[1]=round(list(pygame.mouse.get_pos())[1]/mouz)
+   if shift==True:
+    if mouse3==True: do("fill")
+   else:
+    if mouse1==True: do("draw")
+    if mouse2==True: do("pick")
+  else:
+   pygame.mouse.set_visible(True)
+
+ if cnum==0: color=non
+ elif cnum==1: color=bla
+ elif cnum==2: color=whi
+ elif cnum==3: color=red
+ elif cnum==4: color=yel
+ elif cnum==5: color=gre
+ elif cnum==6: color=cya
+ elif cnum==7: color=blu
+ elif cnum==8: color=mag
+
+ if cursor[0]<0: cursor[0]=(canvas-1)
+ if cursor[0]>(canvas-1): cursor[0]=0
+ if cursor[1]<0: cursor[1]=(canvas-1)
+ if cursor[1]>(canvas-1): cursor[1]=0
+ csurf.fill(non)
+ if cx>6: cx=0
+ if cx==0 or cx==6: ccol=bla
+ if cx==1 or cx==5: ccol=[max(0,int(color[0]-170)),max(0,int(color[1]-170)),max(0,int(color[2]-170))]
+ if cx==2 or cx==4: ccol=[max(0,int(color[0]-85)),max(0,int(color[1]-85)),max(0,int(color[2]-85))]
+ if cx==3: ccol=color
+ cx+=1
+ pygame.draw.rect(csurf,tuple(ccol),pygame.Rect(cursor[0],cursor[1],1,1))
+
+ # render
+ frame=pygame.transform.scale(surf,(window,window))
+ win.blit(frame,frame.get_rect())
+ if show==True:
+  cframe=pygame.transform.scale(csurf,(window,window))
+  win.blit(cframe,cframe.get_rect())
+  txtsurf=font.render(string,True,bla); win.blit(txtsurf,(1,1))
+  txtsurf=font.render(string,True,whi); win.blit(txtsurf,(0,0))
+ pygame.display.flip()
+ clock.tick(30)
